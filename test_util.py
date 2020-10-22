@@ -102,7 +102,7 @@ def function_testcase(module_name, function_name, *, args, expected_result):
         pretty_args = repr(tuple(args)) if len(args) != 1 else '({!r})'.format(args[0])
         raise TestFailure("{}{} should return {!r}.".format(function_name, pretty_args, expected_result))
     return test_passed
-        
+
 
 guard_line_re = re.compile(
     r'^if\s+__name__\s*==\s*[\'"]__main__[\'"]\s*:',
