@@ -10,6 +10,14 @@ class TestFailure(AssertionError):
     pass
 
 
+def format_tb(exc_info):
+    """Accepts *sys.exc_info()."""
+    tbe = traceback.TracebackException(*exc_info)
+    if "test_util.py" in tbe.stack[0].filename:
+        del tbe.stack[0]
+    return "".join(tbe.format(chain=True))
+
+
 def test(input="", show_stdout=True):
     """
     Decorator for the ZyLabs test_passed function that:
@@ -80,14 +88,14 @@ def test(input="", show_stdout=True):
                         test_feedback.write("Assertion failed: " + assertion_err)
                     else:
                         test_feedback.write("Error running your code:")
-                    test_feedback.write(
-                        "\n\n" + traceback.format_exc()
-                    )
+                    test_feedback.write("\n\n" + format_tb(sys.exc_info()))
                 return False
             except:
-                test_feedback.write(
-                    "Error running your code:\n\n" + traceback.format_exc()
+                tb = format_tb(sys.exc_info())
+                tb = tb.replace(
+                    "/home/runner/local/submission/unit_test_student_code/", ""
                 )
+                test_feedback.write("Error running your code:\n\n" + tb)
                 return False
 
         return test_passed
