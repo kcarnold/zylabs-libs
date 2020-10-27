@@ -117,6 +117,20 @@ def function_testcase(module_name, function_name, *, args, expected_result):
     return test_passed
 
 
+def get_global_refs(callable):
+    # Get inside any wrappers, like bound method objects.
+    while hasattr(callable, "__func__"):
+        callable = callable.__func__
+
+    # Get refs
+    refs = set(callable.__code__.co_names)
+
+    # Ignore references to builtins.
+    refs = refs - set(dir(builtins))
+
+    return refs
+
+
 guard_line_re = re.compile(
     r'^if\s+__name__\s*==\s*[\'"]__main__[\'"]\s*:', re.MULTILINE
 )
