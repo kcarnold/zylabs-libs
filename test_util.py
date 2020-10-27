@@ -1,8 +1,10 @@
+import builtins
 import io
 import re
 import sys
 import traceback
 from contextlib import redirect_stdout
+
 
 class TestFailure(AssertionError):
     pass
@@ -35,27 +37,31 @@ def test(input="", show_stdout=True):
             sys.stdin = io.StringIO(input)
             stdout = io.StringIO()
 
-            if input == '':
+            our_feedback = io.StringIO()
+
+            if input == "":
+
                 def input_override(*a):
-                    raise TestFailure("This task should not ask for user input. Comment out or remove any calls to 'input'")
-                import builtins
+                    raise TestFailure(
+                        "This task should not ask for user input. Comment out or remove any calls to 'input'"
+                    )
+
                 builtins.input = input_override
 
             try:
                 with redirect_stdout(stdout):
-                    result = f(test_feedback)
+                    result = f(our_feedback)
+                our_feedback_val = our_feedback.getvalue()
+                test_feedback.write(our_feedback_val)
                 # Show the actual output.
                 if show_stdout:
                     sys.stdout.write(stdout.getvalue())
                 if result is None:
                     result = True
                 if result:
-                    # Add a newline first, if needed.
-                    if hasattr(test_feedback, 'getvalue'):
-                        cur_feedback = test_feedback.getvalue()
-                        if len(cur_feedback) and cur_feedback[-1] != "\n":
-                            test_feedback.write('\n')
-                    test_feedback.write('Passed!\n')
+                    # If the test didn't write a warning, write "Passed!"
+                    if len(our_feedback_val) == 0:
+                        test_feedback.write("Passed!\n")
                 return result
             except TestFailure as e:
                 test_feedback.write(str(e))
@@ -88,8 +94,10 @@ def test(input="", show_stdout=True):
 
     return wrapper
 
+
 def function_testcase(module_name, function_name, *, args, expected_result):
     import importlib
+
     @test()
     def test_passed(test_feedback):
         module = importlib.import_module(module_name)
@@ -99,16 +107,21 @@ def function_testcase(module_name, function_name, *, args, expected_result):
         result = func(*args)
         if result == expected_result:
             return True
-        pretty_args = repr(tuple(args)) if len(args) != 1 else '({!r})'.format(args[0])
-        raise TestFailure("{}{} should return {!r}.".format(function_name, pretty_args, expected_result))
+        pretty_args = repr(tuple(args)) if len(args) != 1 else "({!r})".format(args[0])
+        raise TestFailure(
+            "{}{} should return {!r}.".format(
+                function_name, pretty_args, expected_result
+            )
+        )
+
     return test_passed
 
 
 guard_line_re = re.compile(
-    r'^if\s+__name__\s*==\s*[\'"]__main__[\'"]\s*:',
-    re.MULTILINE)
+    r'^if\s+__name__\s*==\s*[\'"]__main__[\'"]\s*:', re.MULTILINE
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     assert guard_line_re.match('if __name__ == "__main__":')
     assert guard_line_re.match("if __name__ == '__main__':")
     assert guard_line_re.match("if __name__=='__main__'  :")
@@ -118,11 +131,10 @@ if __name__ == '__main__':
 
     assert guard_line_re.search('\n\nif __name__ == "__main__":\n    print("test")\n')
 
-    @test(input='abc')
+    @test(input="abc")
     def test_passed(test_feedback):
         assert 1 == 0, "1 should equal 0"
 
-    import io
     test_feedback = io.StringIO()
     assert test_passed(test_feedback) is False
     assert test_feedback.getvalue() == "1 should equal 0"
