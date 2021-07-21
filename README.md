@@ -28,3 +28,11 @@ def test_passed(test_feedback):
     assert f1.numerator == 1 and f1.denominator == 2, "__mul__ should not change 'self'."
     assert f2.numerator == 2 and f2.denominator == 3, "__mul__ should not change the other fraction."
 ```
+
+## doctests
+
+Students sometimes have trouble with the unit tests because they don't know how to reproduce a failure.
+The Python standard library has a solution for this: [doctests](https://docs.python.org/3/library/doctest.html).
+I've been trying this out with ZyLabs; see `doctest_example.py` for an example of how to write a unit test that's actually a doctest.
+
+I don't think it'll run any doctests that students write, but that would be a nifty extension (to be able to test their tests, for example).
