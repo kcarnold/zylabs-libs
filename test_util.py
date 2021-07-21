@@ -61,9 +61,6 @@ def test(input="", show_stdout=True):
                     result = f(our_feedback)
                 our_feedback_val = our_feedback.getvalue()
                 test_feedback.write(our_feedback_val)
-                # Show the actual output.
-                if show_stdout:
-                    sys.stdout.write(stdout.getvalue())
                 if result is None:
                     result = True
                 if result:
@@ -97,6 +94,10 @@ def test(input="", show_stdout=True):
                 )
                 test_feedback.write("Error running your code:\n\n" + tb)
                 return False
+            finally:
+                # Show the actual output.
+                if show_stdout:
+                    sys.stdout.write(stdout.getvalue())
 
         return test_passed
 
