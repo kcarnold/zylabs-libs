@@ -131,13 +131,8 @@ def get_global_refs(callable):
     while hasattr(callable, "__func__"):
         callable = callable.__func__
 
-    # Get refs
-    refs = set(callable.__code__.co_names)
-
-    # Ignore references to builtins.
-    refs = refs - set(dir(builtins))
-
-    return refs
+    import inspect
+    return inspect.getclosurevars(callable).globals.keys()
 
 
 guard_line_re = re.compile(
