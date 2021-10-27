@@ -34,5 +34,15 @@ def test_passed(test_feedback):
 Students sometimes have trouble with the unit tests because they don't know how to reproduce a failure.
 The Python standard library has a solution for this: [doctests](https://docs.python.org/3/library/doctest.html).
 I've been trying this out with ZyLabs; see `doctest_example.py` for an example of how to write a unit test that's actually a doctest.
+Students need some coaching to be able to interpret the doctest error report, especially since I haven't yet cleaned up the stack trace in the doctest report like I do in `@test()`.
+
+It'll return a fractional score based on how many of the doctests passed.
+
+Note that it doesn't distinguish between `return`ing a value and `print`ing it. So you may need to demo the effect of that, like:
+
+```
+>>> not is_prime(4)
+True
+```
 
 I don't think it'll run any doctests that students write, but that would be a nifty extension (to be able to test their tests, for example).

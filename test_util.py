@@ -1,3 +1,4 @@
+import ast
 import builtins
 import io
 import re
@@ -63,10 +64,12 @@ def test(input="", show_stdout=True):
                 test_feedback.write(our_feedback_val)
                 if result is None:
                     result = True
-                if result:
-                    # If the test didn't write a warning, write "Passed!"
-                    if len(our_feedback_val) == 0:
+                if len(our_feedback_val) == 0:
+                    # If the test didn't write something, write something here.
+                    if result:
                         test_feedback.write("Passed!\n")
+                    else:
+                        test_feedback.write("Test didn't pass. Some message should have been reported but didn't; please alert the course staff.")
                 return result
             except TestFailure as e:
                 test_feedback.write(str(e))
@@ -103,6 +106,35 @@ def test(input="", show_stdout=True):
 
     return wrapper
 
+def doctester(module_name, total_points=1):
+    '''
+    Usage:
+    
+    Start with a triple-quoted doctest session. Then:
+
+    from test_util import doctester
+    test_passed = doctester("credit_card", total_points=3)
+    '''
+    import doctest, sys, importlib
+
+    testcase_module = sys.modules['zyLabsUnitTest']
+    testcase_module.__file__ = 'zyLabsUnitTest.py'
+
+    @test()
+    def test_passed(test_feedback):
+        target_module = importlib.import_module(module_name)
+        #assert sys.stdout.getvalue() == '', "Please comment out any input or print statements when submitting."
+        failure_count, test_count = doctest.testmod(
+            testcase_module,
+            extraglobs=target_module.__dict__,
+            optionflags=doctest.DONT_ACCEPT_TRUE_FOR_1 | doctest.ELLIPSIS, # doctest.FAIL_FAST
+            name="zyBooks_test",
+            report=True,
+            verbose=False
+        )
+        return total_points * (1 - (failure_count / test_count))
+    return test_passed
+
 
 def function_testcase(module_name, function_name, *, args, expected_result):
     import importlib
@@ -133,6 +165,43 @@ def get_global_refs(callable):
 
     import inspect
     return inspect.getclosurevars(callable).globals.keys()
+
+def filenames_test(*filenames):
+    """
+    Example usage:
+    
+    import test_util
+    test_passed = test_util.filenames_test("submission_file.py")
+    """
+    def test_passed(test_feedback):
+        for FILENAME in filenames:
+            try:
+                source = open(FILENAME).read()
+                parsed = ast.parse(source, filename=FILENAME)
+                docstring = ast.get_docstring(parsed)
+            except SyntaxError:
+                test_feedback.write(traceback.format_exc(limit=0))
+                return False
+            except:
+                test_feedback.write("Unknown error reading documentation. Ask the course staff for help.\n\n" + traceback.format_exc())
+
+            if docstring is None or not any(x in docstring for x in ['\nAuthor', 'Author:', '@author']):
+                test_feedback.write(FILENAME + " documentation should include author (see the template).")
+                return False
+
+            if any(x in docstring for x in ['YOUR-NAME', 'yn123', 'PARTNER-NAME', 'pn31']):
+                test_feedback.write(FILENAME + ": Please replace the template names and usernames with your own.")
+                return False
+
+            if any(x in docstring for x in ["Describe the module here.", "Lab X.X"]):
+                test_feedback.write(FILENAME + ": Please replace the template documentation with your own.")
+                return False
+            
+        test_feedback.write("Passed!")
+        return True
+    return test_passed
+
+name_test = names_test = filenames_test
 
 
 guard_line_re = re.compile(
