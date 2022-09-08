@@ -8,11 +8,11 @@
 import zipfile
 import pathlib
 import io
-import pandas as pd
 
 working_dir = pathlib.Path('.')
 
 try:
+    import pandas as pd
     report = pd.read_csv('report.csv')
     all_student_ids = list(report['School email'].str.split('@', expand=True).iloc[:,0])
 except:
