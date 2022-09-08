@@ -50,12 +50,13 @@ def get_data_for_submission(all_students_zipfile, student_zipfile_name):
         contents = this_student_zipfile.open(name_in_user_file).read().decode('utf8')
         submission_files[name_in_user_file] = contents
     other_authors = {author for content in submission_files.values() for author in get_credited_authors(content)}
-    if all_student_ids != [] and student_id not in other_authors:
-        print("Submitting student didn't include their id:", student_id)
-    else:
-        other_authors.remove(student_id)
-        if other_authors:
-            print(f"{student_id} also credited {', '.join(other_authors)}")
+    if all_student_ids != []:
+        if student_id not in other_authors:
+            print("Submitting student didn't include their id:", student_id)
+        else:
+            other_authors.remove(student_id)
+            if other_authors:
+                print(f"{student_id} also credited {', '.join(other_authors)}")
     return dict(
         name=name.replace('_', ' '),
         student_id=student_id,
